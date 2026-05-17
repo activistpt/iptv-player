@@ -8,7 +8,7 @@ Este projeto foi desenvolvido com o foco na facilidade de utilização, permitin
 ## 🚀 Funcionalidades
 
 * **Suporte M3U/M3U8:** Carregamento direto de listas de reprodução remotas (via URL).
-* **Compatibilidade com Xtream Codes:** Opção avançada para adicionar listas utilizando credenciais Xtream API (Utilizador, Palavra-passe e URL do Servidor).
+* **Compatibilidade com Xtream Codes:** Opção avançada para adicionar listas utilizando credenciais Xtream API.
 * **Interface Limpa:** Navegação intuitiva entre categorias e canais.
 * **Leitor Integrado:** Player de vídeo otimizado para transmissões em direto (Live Streams) e conteúdo On-Demand.
 * **Desenvolvimento Web Moderno:** Construído utilizando tecnologias web standard para garantir rapidez e compatibilidade.
