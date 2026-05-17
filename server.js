@@ -176,7 +176,7 @@ app.get('/api/m3u', async (req, res) => {
       const urlObj = new URL(m3uUrl);
       const username = urlObj.searchParams.get('username') || '';
       const password = urlObj.searchParams.get('password') || '';
-      const host = `${urlObj.protocol}//${urlObj.host}${urlObj.port ? ':' + urlObj.port : ''}`;
+      const host = `${urlObj.protocol}//${urlObj.hostname}:${urlObj.port || 80}`;
 
       if (!username || !password) {
         return res.status(400).json({ error: 'URL Xtream sem username/password' });
