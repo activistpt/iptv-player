@@ -44,5 +44,5 @@ Contribuições são sempre bem-vindas! Se encontrares algum bug ou tiveres suge
 Faz um Fork do projeto. Cria uma Branch para a tua funcionalidade (git checkout -b feature/NovaFuncionalidade).
 Submete um Pull Request.
 
-Créditos e Desenvolvimento
+Créditos:
 Projeto desenvolvido por: RɆβɆŁŞØɄŁ
