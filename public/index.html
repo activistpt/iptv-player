@@ -289,7 +289,8 @@ async function loadXtream(host,user,pass){
     const channels=await chResp.json();
     const catMap={};
     categories.forEach(c=>{catMap[c.category_id]=c.category_name;});
-    allChannels=channels.map(ch=>({
+    const channelList=Array.isArray(channels)?channels:(channels.channels||[]);
+    allChannels=channelList.map(ch=>({
       name:ch.name,
       logo:ch.stream_icon||'',
       group:catMap[ch.category_id]||'Geral',
