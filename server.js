@@ -103,9 +103,9 @@ app.get('/api/xtream/categories', async (req, res) => {
   }
 });
 
-// === XTREAM API — Buscar canais ===
+// === XTREAM API — Buscar canais (com limite e busca) ===
 app.get('/api/xtream/channels', async (req, res) => {
-  const { host, username, password, category } = req.query;
+  const { host, username, password, category, search, limit, offset } = req.query;
   if (!host || !username || !password) {
     return res.status(400).json({ error: 'Parâmetros em falta: host, username, password' });
   }
@@ -115,9 +115,22 @@ app.get('/api/xtream/channels', async (req, res) => {
       url += `&category_id=${category}`;
     }
     const response = await fetch(url, { timeout: 30000 });
-    const data = await response.json();
+    let data = await response.json();
+
+    // Filtrar por busca no servidor
+    if (search) {
+      const q = search.toLowerCase();
+      data = data.filter(ch => (ch.name || '').toLowerCase().includes(q));
+    }
+
+    // Paginar no servidor
+    const total = data.length;
+    const off = parseInt(offset) || 0;
+    const lim = parseInt(limit) || 500; // máximo 500 por pedido
+    data = data.slice(off, off + lim);
+
     res.set('Access-Control-Allow-Origin', '*');
-    res.json(data);
+    res.json({ total, channels: data });
   } catch (err) {
     res.status(502).json({ error: 'Falha Xtream', detail: err.message });
   }
