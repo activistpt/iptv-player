@@ -45,4 +45,4 @@ Faz um Fork do projeto. Cria uma Branch para a tua funcionalidade (git checkout 
 Submete um Pull Request.
 
 Créditos:
-Projeto desenvolvido por: RɆβɆŁŞØɄŁ
+RɆβɆŁŞØɄŁ
