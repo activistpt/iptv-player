@@ -284,7 +284,7 @@ async function loadXtream(host,user,pass){
     const catResp=await fetch('/api/xtream/categories?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
     if(!catResp.ok) throw new Error('HTTP '+catResp.status);
     const categories=await catResp.json();
-    const chResp=await fetch('/api/xtream/channels?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
+    const chResp=await fetch('/api/xtream/channels?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass+'&limit=500');
     if(!chResp.ok) throw new Error('HTTP '+catResp.status);
     const channels=await chResp.json();
     const catMap={};
