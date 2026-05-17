@@ -43,5 +43,7 @@ O código principal deste componente encontra-se estruturado na diretoria tree/m
 Cria uma Branch para a tua funcionalidade (git checkout -b feature/NovaFuncionalidade).
 Submete um Pull Request.
 
+https://buymeacoffee.com/ptlegion
+
 Créditos:
 RɆβɆŁŞØɄŁ
