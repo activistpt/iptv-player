@@ -281,11 +281,18 @@ async function loadXtream(host,user,pass){
   currentGroup='all';
   resetPagination();
   try{
-    const catResp=await fetch('/api/xtream/categories?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),15000);
+    const catResp=await fetch('/api/xtream/categories?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass,{signal:ctrl.signal});
+    clearTimeout(timer);
     if(!catResp.ok) throw new Error('HTTP '+catResp.status);
     const categories=await catResp.json();
-    const chResp=await fetch('/api/xtream/channels?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass+'&limit=500');
-    if(!chResp.ok) throw new Error('HTTP '+catResp.status);
+    
+    const ctrl2=new AbortController();
+    const timer2=setTimeout(()=>ctrl2.abort(),15000);
+    const chResp=await fetch('/api/xtream/channels?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass+'&limit=500',{signal:ctrl2.signal});
+    clearTimeout(timer2);
+    if(!chResp.ok) throw new Error('HTTP '+chResp.status);
     const channels=await chResp.json();
     const catMap={};
     categories.forEach(c=>{catMap[c.category_id]=c.category_name;});
@@ -521,7 +528,17 @@ function switchConfigTab(tab,el){
 }
 
 // === INIT ===
-loadCurrentPlaylist();
+// Se não há playlist ativa, mostrar config
+const pls=getPlaylists();
+const active=getActivePlaylist();
+if(!active||!pls.find(p=>p.id===active)){
+  // Primeira vez - limpar dados antigos e mostrar config
+  localStorage.removeItem('iptv_playlists');
+  localStorage.removeItem('iptv_active_pl');
+  openConfig();
+}else{
+  loadCurrentPlaylist();
+}
 </script>
 </body>
 </html>
