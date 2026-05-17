@@ -6,75 +6,40 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// === CONFIGURAÇÃO DA LISTA IPTV ===
-// Pode ser configurada via variável de ambiente ou diretamente aqui
-const IPTV_URL = process.env.IPTV_URL || '';
-const IPTV_USER = process.env.IPV_USER || '';
-const IPTV_PASS = process.env.IPTV_PASS || '';
-
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// === PROXY CORS — Resolve problemas de cross-origin ===
-// Qualquer pedido a /api/proxy?url=... é reencaminhado com headers corretos
+// === PROXY CORS ===
 app.get('/api/proxy', async (req, res) => {
   const targetUrl = req.query.url;
-  if (!targetUrl) {
-    return res.status(400).json({ error: 'URL em falta. Usa: /api/proxy?url=...' });
-  }
-
+  if (!targetUrl) return res.status(400).json({ error: 'URL em falta' });
   try {
     const origin = new URL(targetUrl).origin;
     const response = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36',
         'Accept': '*/*',
-        'Accept-Language': 'pt-PT,pt;q=0.9,en;q=0.8',
         'Referer': origin,
         'Origin': origin,
-        'Connection': 'keep-alive',
       },
       timeout: 30000,
     });
-
-    // Passar headers importantes do stream
-    const contentType = response.headers.get('content-type') || 'video/mp2t';
-    res.set('Content-Type', contentType);
+    const ct = response.headers.get('content-type') || 'application/octet-stream';
+    res.set('Content-Type', ct);
     res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Headers', '*');
-    res.set('Access-Control-Expose-Headers', '*');
-    res.set('Accept-Ranges', 'bytes');
-    // Não cachear streams de vídeo
-    if (contentType.includes('video') || contentType.includes('octet') || contentType.includes('mpeg')) {
-      res.set('Cache-Control', 'no-cache, no-store');
-    } else {
-      res.set('Cache-Control', 'public, max-age=300');
-    }
-
-    // Suportar range requests para vídeo
-    const range = req.headers.range;
-    if (range) {
-      res.status(206);
-    }
-
     const body = await response.buffer();
     res.send(body);
   } catch (err) {
-    console.error(`[PROXY ERROR] ${targetUrl}: ${err.message}`);
     res.status(502).json({ error: 'Proxy falhou', detail: err.message });
   }
 });
 
-// === PROXY STREAM — Proxy dedicado para streams de vídeo ===
-// Usa /stream?url=... para forçar o browser a passar pelo proxy
+// === PROXY STREAM — Relay de vídeo via Xtream ===
 app.get('/stream', async (req, res) => {
   const targetUrl = req.query.url;
-  if (!targetUrl) {
-    return res.status(400).json({ error: 'URL em falta. Usa: /stream?url=...' });
-  }
-
+  if (!targetUrl) return res.status(400).json({ error: 'URL em falta' });
   try {
     const origin = new URL(targetUrl).origin;
     const response = await fetch(targetUrl, {
@@ -83,79 +48,118 @@ app.get('/stream', async (req, res) => {
         'Accept': '*/*',
         'Referer': origin,
         'Origin': origin,
-        'Connection': 'keep-alive',
       },
       timeout: 60000,
     });
-
-    // Forçar content-type de vídeo
     const ct = response.headers.get('content-type') || '';
-    if (ct.includes('octet') || ct.includes('text') || !ct) {
+    if (ct.includes('text') || !ct) {
       res.set('Content-Type', 'video/mp2t');
     } else {
       res.set('Content-Type', ct);
     }
     res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Headers', '*');
     res.set('Cache-Control', 'no-cache, no-store');
     res.set('Accept-Ranges', 'bytes');
-
-    // Stream em vez de buffer (melhor para vídeo)
     response.body.pipe(res);
   } catch (err) {
-    console.error(`[STREAM ERROR] ${targetUrl}: ${err.message}`);
     res.status(502).json({ error: 'Stream falhou', detail: err.message });
   }
 });
 
-// === FETCH M3U — Descarrega e serve a lista com CORS ===
-app.get('/api/m3u', async (req, res) => {
-  const m3uUrl = req.query.url || IPTV_URL;
-  if (!m3uUrl) {
-    return res.status(400).json({ error: 'Nenhuma lista M3U configurada' });
-  }
-
-  try {
-    const response = await fetch(m3uUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-        'Accept': '*/*',
-        'Accept-Language': 'pt-PT,pt;q=0.9',
-        'Referer': new URL(m3uUrl).origin,
-        'Origin': new URL(m3uUrl).origin,
-      },
-      timeout: 20000,
-    });
-
-    const text = await response.text();
-    res.set('Content-Type', 'application/x-mpegURL; charset=utf-8');
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Cache-Control', 'public, max-age=600');
-    res.send(text);
-  } catch (err) {
-    console.error(`[M3U ERROR] ${m3uUrl}: ${err.message}`);
-    res.status(502).json({ error: 'Falha ao descarregar M3U', detail: err.message });
-  }
-});
-
-// === FETCH XTREAM — Proxy para Xtream Codes API ===
-app.get('/api/xtream/:action', async (req, res) => {
-  const { action } = req.params;
+// === XTREAM API — Buscar categorias ===
+app.get('/api/xtream/categories', async (req, res) => {
   const { host, username, password } = req.query;
-
   if (!host || !username || !password) {
     return res.status(400).json({ error: 'Parâmetros em falta: host, username, password' });
   }
-
-  const url = `${host}/player_api.php?username=${username}&password=${password}&action=${action}`;
   try {
+    const url = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_categories`;
     const response = await fetch(url, { timeout: 15000 });
     const data = await response.json();
     res.set('Access-Control-Allow-Origin', '*');
     res.json(data);
   } catch (err) {
-    console.error(`[XTREAM ERROR] ${url}: ${err.message}`);
     res.status(502).json({ error: 'Falha Xtream', detail: err.message });
+  }
+});
+
+// === XTREAM API — Buscar canais ===
+app.get('/api/xtream/channels', async (req, res) => {
+  const { host, username, password, category } = req.query;
+  if (!host || !username || !password) {
+    return res.status(400).json({ error: 'Parâmetros em falta: host, username, password' });
+  }
+  try {
+    let url = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_streams`;
+    if (category && category !== 'all') {
+      url += `&category_id=${category}`;
+    }
+    const response = await fetch(url, { timeout: 30000 });
+    const data = await response.json();
+    res.set('Access-Control-Allow-Origin', '*');
+    res.json(data);
+  } catch (err) {
+    res.status(502).json({ error: 'Falha Xtream', detail: err.message });
+  }
+});
+
+// === XTREAM API — Gerar M3U a partir da API ===
+app.get('/api/xtream/m3u', async (req, res) => {
+  const { host, username, password } = req.query;
+  if (!host || !username || !password) {
+    return res.status(400).json({ error: 'Parâmetros em falta' });
+  }
+  try {
+    // Buscar categorias
+    const catUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_categories`;
+    const catResp = await fetch(catUrl, { timeout: 15000 });
+    const categories = await catResp.json();
+    const catMap = {};
+    categories.forEach(c => { catMap[c.category_id] = c.category_name; });
+
+    // Buscar canais
+    const chUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_streams`;
+    const chResp = await fetch(chUrl, { timeout: 30000 });
+    const channels = await chResp.json();
+
+    // Gerar M3U
+    let m3u = '#EXTM3U\n';
+    channels.forEach(ch => {
+      const logo = ch.stream_icon || '';
+      const group = catMap[ch.category_id] || 'Geral';
+      const name = ch.name || '';
+      const streamId = ch.stream_id;
+      const streamUrl = `${host}/live/${username}/${password}/${streamId}.ts`;
+      m3u += `#EXTINF:-1 tvg-logo="${logo}" group-title="${group}",${name}\n`;
+      m3u += `${streamUrl}\n`;
+    });
+
+    res.set('Content-Type', 'application/x-mpegURL; charset=utf-8');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.send(m3u);
+  } catch (err) {
+    res.status(502).json({ error: 'Falha ao gerar M3U', detail: err.message });
+  }
+});
+
+// === FETCH M3U (fallback para listas diretas) ===
+app.get('/api/m3u', async (req, res) => {
+  const m3uUrl = req.query.url;
+  if (!m3uUrl) return res.status(400).json({ error: 'URL em falta' });
+  try {
+    const response = await fetch(m3uUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36',
+        'Accept': '*/*',
+      },
+      timeout: 20000,
+    });
+    const text = await response.text();
+    res.set('Content-Type', 'application/x-mpegURL; charset=utf-8');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.send(text);
+  } catch (err) {
+    res.status(502).json({ error: 'Falha ao descarregar M3U', detail: err.message });
   }
 });
 
@@ -167,10 +171,7 @@ app.get('/health', (req, res) => {
 // === SERVE PLAYER ===
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'), (err) => {
-    if (err) {
-      // Fallback: servir HTML inline se o ficheiro não existir
-      res.send(getInlineHTML());
-    }
+    if (err) res.send(getInlineHTML());
   });
 });
 
@@ -222,9 +223,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .modal h2{font-size:18px;margin-bottom:16px;color:var(--accent2)}
 .modal label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;margin-top:10px}
 .modal input,.modal textarea{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;resize:vertical}
-.modal textarea{min-height:80px;font-family:monospace}
+.modal textarea{min-height:60px;font-family:monospace}
 .modal input:focus,.modal textarea:focus{border-color:var(--accent)}
 .modal .actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab{padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;background:var(--bg);border:1px solid var(--border);color:var(--muted)}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 @media(max-width:600px){.main{flex-direction:column}.channels{width:100%;height:45%;border-right:none;border-bottom:1px solid var(--border)}.player-area{height:55%}}
 </style>
 </head>
@@ -252,10 +256,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="modal-overlay" id="configModal">
   <div class="modal">
     <h2>⚙️ Configuração</h2>
-    <label>URL da lista M3U (Xtream Codes)</label>
-    <textarea id="m3uUrl" placeholder="http://servidor:8080/get.php?username=USER&password=PASS&type=m3u_plus"></textarea>
-    <label>OU URL direta do ficheiro M3U</label>
-    <input type="text" id="m3uDirect" placeholder="http://servidor/playlist.m3u">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('xtream',this)">Xtream Codes</div>
+      <div class="tab" onclick="switchTab('m3u',this)">M3U Direto</div>
+    </div>
+    <div id="xtreamTab">
+      <label>Host (ex: http://servidor:8080)</label>
+      <input type="text" id="xtreamHost" placeholder="http://servidor:8080">
+      <label>Username</label>
+      <input type="text" id="xtreamUser" placeholder="username">
+      <label>Password</label>
+      <input type="password" id="xtreamPass" placeholder="password">
+    </div>
+    <div id="m3uTab" style="display:none">
+      <label>URL da lista M3U</label>
+      <textarea id="m3uUrl" placeholder="http://servidor/playlist.m3u"></textarea>
+    </div>
     <div class="actions">
       <button class="btn btn-ghost" onclick="closeConfig()">Cancelar</button>
       <button class="btn" onclick="saveConfig()">💾 Guardar & Carregar</button>
@@ -264,18 +280,76 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 <script>
 const video=document.getElementById('video'),channelsEl=document.getElementById('channels'),groupsEl=document.getElementById('groups'),searchEl=document.getElementById('search'),nowPlaying=document.getElementById('nowPlaying');
-let allChannels=[],currentGroup='all';
-async function loadPlaylist(){
-  let url=localStorage.getItem('iptv_url');
-  if(!url){openConfig();return}
-  await fetchAndParse(url);
+let allChannels=[],currentGroup='all',currentMode='';
+
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('xtreamTab').style.display=tab==='xtream'?'block':'none';
+  document.getElementById('m3uTab').style.display=tab==='m3u'?'block':'none';
 }
-async function fetchAndParse(url){
+
+async function loadPlaylist(){
+  const mode=localStorage.getItem('iptv_mode');
+  if(!mode){openConfig();return}
+  if(mode==='xtream'){
+    const host=localStorage.getItem('xtream_host');
+    const user=localStorage.getItem('xtream_user');
+    const pass=localStorage.getItem('xtream_pass');
+    if(!host||!user||!pass){openConfig();return}
+    await loadXtream(host,user,pass);
+  }else{
+    const url=localStorage.getItem('m3u_url');
+    if(!url){openConfig();return}
+    await loadM3U(url);
+  }
+}
+
+async function loadXtream(host,user,pass){
   channelsEl.innerHTML='<div class="empty"><div class="spinner"></div><span>A carregar canais...</span></div>';
   groupsEl.innerHTML='<div class="group-tag active" onclick="filterGroup(\\'all\\',this)">Todos</div>';
   allChannels=[];
+  currentMode='xtream';
   try{
-    const proxyUrl='/api/proxy?url='+encodeURIComponent(url);
+    // Buscar categorias
+    const catResp=await fetch('/api/xtream/categories?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
+    if(!catResp.ok) throw new Error('HTTP '+catResp.status);
+    const categories=await catResp.json();
+
+    // Buscar canais
+    const chResp=await fetch('/api/xtream/channels?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
+    if(!chResp.ok) throw new Error('HTTP '+chResp.status);
+    const channels=await chResp.json();
+
+    // Mapear categorias
+    const catMap={};
+    categories.forEach(c=>{catMap[c.category_id]=c.category_name;});
+
+    // Converter para formato interno
+    allChannels=channels.map(ch=>({
+      name:ch.name,
+      logo:ch.stream_icon||'',
+      group:catMap[ch.category_id]||'Geral',
+      url:host+'/live/'+user+'/'+pass+'/'+ch.stream_id+'.ts',
+      streamId:ch.stream_id
+    }));
+
+    if(!allChannels.length){channelsEl.innerHTML='<div class="empty"><span>❌ Nenhum canal encontrado</span></div>';return}
+    buildGroups();
+    renderChannels(allChannels);
+    if(allChannels[0]) playChannel(allChannels[0]);
+  }catch(err){
+    channelsEl.innerHTML='<div class="empty"><span>❌ Erro: '+err.message+'</span><br><button class="btn" style="margin-top:12px" onclick="openConfig()">Configurar</button></div>';
+  }
+}
+
+async function loadM3U(url){
+  channelsEl.innerHTML='<div class="empty"><div class="spinner"></div><span>A carregar canais...</span></div>';
+  groupsEl.innerHTML='<div class="group-tag active" onclick="filterGroup(\\'all\\',this)">Todos</div>';
+  allChannels=[];
+  currentMode='m3u';
+  try{
+    const proxyUrl='/api/m3u?url='+encodeURIComponent(url);
     const resp=await fetch(proxyUrl);
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const text=await resp.text();
@@ -284,6 +358,7 @@ async function fetchAndParse(url){
     channelsEl.innerHTML='<div class="empty"><span>❌ Erro: '+err.message+'</span><br><button class="btn" style="margin-top:12px" onclick="openConfig()">Configurar</button></div>';
   }
 }
+
 function parseM3U(text){
   const lines=text.split('\\n');
   let cur={};
@@ -308,6 +383,7 @@ function parseM3U(text){
   renderChannels(allChannels);
   if(allChannels[0]) playChannel(allChannels[0]);
 }
+
 function buildGroups(){
   const groups=[...new Set(allChannels.map(c=>c.group))].sort();
   groupsEl.innerHTML='<div class="group-tag active" onclick="filterGroup(\\'all\\',this)">Todos</div>';
@@ -319,61 +395,86 @@ function buildGroups(){
     groupsEl.appendChild(t);
   });
 }
+
 function renderChannels(list){
   if(!list.length){channelsEl.innerHTML='<div class="empty"><span>Nenhum canal encontrado</span></div>';return}
   channelsEl.innerHTML=list.map(ch=>'<div class="channel-item" data-url="'+ch.url.replace(/'/g,"\\\\'")+'" onclick="playChannelByUrl(this.dataset.url")><img class="channel-logo" src="'+(ch.logo||'')+'" onerror="this.style.display=\\'none\\'"><div class="channel-info"><div class="channel-name">'+ch.name+'</div><div class="channel-group">'+ch.group+'</div></div></div>').join('');
 }
+
 function playChannel(ch){
   if(!ch||!ch.url)return;
   nowPlaying.textContent=ch.name;
-  // Usar proxy de stream para evitar CORS e problemas de content-type
   const streamUrl='/stream?url='+encodeURIComponent(ch.url);
   video.src=streamUrl;
   video.play().catch(()=>{});
   document.querySelectorAll('.channel-item').forEach(el=>el.classList.toggle('active',el.dataset.url===ch.url));
 }
+
 function playChannelByUrl(url){
   const ch=allChannels.find(c=>c.url===url);
   if(ch) playChannel(ch);
 }
+
 function filterChannels(){
   const q=searchEl.value.toLowerCase();
   const f=allChannels.filter(c=>c.name.toLowerCase().includes(q)&&(currentGroup==='all'||c.group===currentGroup));
   renderChannels(f);
 }
+
 function filterGroup(g,el){
   currentGroup=g;
   document.querySelectorAll('.group-tag').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   filterChannels();
 }
+
 function toggleFullscreen(){
   const a=document.getElementById('playerArea');
   if(document.fullscreenElement)document.exitFullscreen();else a.requestFullscreen();
 }
+
 function openConfig(){
-  document.getElementById('m3uUrl').value=localStorage.getItem('iptv_url')||'';
+  document.getElementById('xtreamHost').value=localStorage.getItem('xtream_host')||'';
+  document.getElementById('xtreamUser').value=localStorage.getItem('xtream_user')||'';
+  document.getElementById('xtreamPass').value=localStorage.getItem('xtream_pass')||'';
+  document.getElementById('m3uUrl').value=localStorage.getItem('m3u_url')||'';
   document.getElementById('configModal').classList.add('show');
 }
 function closeConfig(){document.getElementById('configModal').classList.remove('show')}
+
 function saveConfig(){
-  let url=document.getElementById('m3uUrl').value.trim()||document.getElementById('m3uDirect').value.trim();
-  if(!url){alert('Introduz um URL');return}
-  localStorage.setItem('iptv_url',url);
-  closeConfig();
-  fetchAndParse(url);
+  const activeTab=document.querySelector('.tab.active');
+  if(activeTab.textContent.includes('Xtream')){
+    const host=document.getElementById('xtreamHost').value.trim();
+    const user=document.getElementById('xtreamUser').value.trim();
+    const pass=document.getElementById('xtreamPass').value.trim();
+    if(!host||!user||!pass){alert('Preenche todos os campos');return}
+    localStorage.setItem('iptv_mode','xtream');
+    localStorage.setItem('xtream_host',host);
+    localStorage.setItem('xtream_user',user);
+    localStorage.setItem('xtream_pass',pass);
+    closeConfig();
+    loadXtream(host,user,pass);
+  }else{
+    const url=document.getElementById('m3uUrl').value.trim();
+    if(!url){alert('Introduz um URL');return}
+    localStorage.setItem('iptv_mode','m3u');
+    localStorage.setItem('m3u_url',url);
+    closeConfig();
+    loadM3U(url);
+  }
 }
+
 loadPlaylist();
 </script>
 </body>
 </html>`;
 }
 
-// Iniciar
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🎬 IPTV Player a correr em http://0.0.0.0:${PORT}`);
-  console.log(`📡 Proxy CORS: http://0.0.0.0:${PORT}/api/proxy`);
-  console.log(`📋 M3U Fetch:  http://0.0.0.0:${PORT}/api/m3u`);
-  if (IPTV_URL) console.log(`✅ Lista IPTV configurada via env`);
+  console.log(`📡 Xtream API: /api/xtream/{categories|channels|m3u}`);
+  console.log(`📋 M3U Fallback: /api/m3u`);
+  console.log(`🎥 Stream Proxy: /stream`);
   console.log('');
 });
