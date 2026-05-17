@@ -37,6 +37,7 @@ app.get('/api/proxy', async (req, res) => {
 });
 
 // === PROXY STREAM — Relay de vídeo via Xtream ===
+// Para HLS (.m3u8), reescreve caminhos relativos para passar pelo proxy
 app.get('/stream', async (req, res) => {
   const targetUrl = req.query.url;
   if (!targetUrl) return res.status(400).json({ error: 'URL em falta' });
@@ -52,17 +53,34 @@ app.get('/stream', async (req, res) => {
       timeout: 60000,
     });
     const ct = response.headers.get('content-type') || '';
-    if (ct.includes('text') || !ct) {
-      res.set('Content-Type', 'video/mp2t');
-    } else if (ct.includes('mpegurl') || ct.includes('m3u8')) {
+    const isHLS = ct.includes('mpegurl') || ct.includes('m3u8') || targetUrl.endsWith('.m3u8');
+
+    if (isHLS) {
+      // HLS: reescrever caminhos relativos para passar pelo proxy
+      let text = await response.text();
+      // Substituir caminhos relativos (/hls/...) por URLs absolutos via proxy
+      text = text.replace(/^(?!#)(\S+)$/gm, (match) => {
+        if (match.startsWith('http')) return match;
+        // Caminho relativo — converter para absoluto via proxy
+        const absUrl = new URL(match, origin).href;
+        return '/stream?url=' + encodeURIComponent(absUrl);
+      });
       res.set('Content-Type', 'application/vnd.apple.mpegurl');
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Cache-Control', 'no-cache, no-store');
+      res.send(text);
     } else {
-      res.set('Content-Type', ct);
+      // Stream direto (TS, etc)
+      if (ct.includes('text') || !ct) {
+        res.set('Content-Type', 'video/mp2t');
+      } else {
+        res.set('Content-Type', ct);
+      }
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Cache-Control', 'no-cache, no-store');
+      res.set('Accept-Ranges', 'bytes');
+      response.body.pipe(res);
     }
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Cache-Control', 'no-cache, no-store');
-    res.set('Accept-Ranges', 'bytes');
-    response.body.pipe(res);
   } catch (err) {
     res.status(502).json({ error: 'Stream falhou', detail: err.message });
   }
