@@ -261,17 +261,31 @@ function loadCurrentPlaylist(){
   else loadM3U(pl.url);
 }
 
+// === PAGINATION ===
+let displayedCount=0;
+const PAGE_SIZE=200;
+
+function resetPagination(){displayedCount=0;}
+
+function loadMoreChannels(){
+  displayedCount+=PAGE_SIZE;
+  const q=searchEl.value.toLowerCase();
+  const filtered=allChannels.filter(c=>c.name.toLowerCase().includes(q)&&(currentGroup==='all'||c.group===currentGroup));
+  renderChannelsPage(filtered);
+}
+
 // === LOADERS ===
 async function loadXtream(host,user,pass){
   showLoading();
   allChannels=[];
   currentGroup='all';
+  resetPagination();
   try{
     const catResp=await fetch('/api/xtream/categories?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
     if(!catResp.ok) throw new Error('HTTP '+catResp.status);
     const categories=await catResp.json();
     const chResp=await fetch('/api/xtream/channels?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
-    if(!chResp.ok) throw new Error('HTTP '+chResp.status);
+    if(!chResp.ok) throw new Error('HTTP '+catResp.status);
     const channels=await chResp.json();
     const catMap={};
     categories.forEach(c=>{catMap[c.category_id]=c.category_name;});
@@ -294,6 +308,7 @@ async function loadM3U(url){
   showLoading();
   allChannels=[];
   currentGroup='all';
+  resetPagination();
   try{
     const proxyUrl='/api/m3u?url='+encodeURIComponent(url);
     const resp=await fetch(proxyUrl);
@@ -353,10 +368,18 @@ function buildGroups(){
 function renderChannels(list){
   const favs=getFavorites();
   if(!list.length){sidebarContent.innerHTML='<div class="channels" id="channels"><div class="empty"><span>Nenhum canal encontrado</span></div></div>';return}
-  sidebarContent.innerHTML='<div class="channels" id="channels">'+list.map(ch=>{
+  displayedCount=Math.min(PAGE_SIZE,list.length);
+  renderChannelsPage(list);
+}
+
+function renderChannelsPage(list){
+  const favs=getFavorites();
+  const page=list.slice(0,displayedCount);
+  const hasMore=displayedCount<list.length;
+  sidebarContent.innerHTML='<div class="channels" id="channels">'+page.map(ch=>{
     const isFav=favs.includes(ch.url);
     return '<div class="channel-item" data-url="'+ch.url.replace(/'/g,"\\'")+'" onclick="playChannelByUrl(this.dataset.url)"><img class="channel-logo" src="'+(ch.logo||'')+'" onerror="this.style.display=\'none\'"><div class="channel-info"><div class="channel-name">'+ch.name+'</div><div class="channel-group">'+ch.group+'</div></div><span class="channel-fav '+(isFav?'active':'')+'" onclick="event.stopPropagation();toggleFav(\''+ch.url.replace(/'/g,"\\'")+'\',this)">'+(isFav?'★':'☆')+'</span></div>';
-  }).join('')+'</div>';
+  }).join('')+(hasMore?'<div style="padding:12px;text-align:center"><button class="btn btn-sm" onclick="loadMoreChannels()">📥 Carregar mais ('+(list.length-displayedCount)+' restantes)</button></div>':'')+'</div>';
 }
 
 function renderFavorites(){
@@ -464,6 +487,7 @@ function playChannelByUrl(url){
 }
 
 function filterChannels(){
+  resetPagination();
   const q=searchEl.value.toLowerCase();
   const f=allChannels.filter(c=>c.name.toLowerCase().includes(q)&&(currentGroup==='all'||c.group===currentGroup));
   renderChannels(f);
@@ -473,6 +497,7 @@ function filterGroup(g,el){
   currentGroup=g;
   document.querySelectorAll('.group-tag').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
+  resetPagination();
   filterChannels();
 }
 
