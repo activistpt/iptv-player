@@ -270,10 +270,25 @@ function saveConfig(){
   }else{
     const url=document.getElementById('m3uUrl').value.trim();
     if(!url){alert('Introduz um URL');return}
-    localStorage.setItem('iptv_mode','m3u');
-    localStorage.setItem('m3u_url',url);
-    closeConfig();
-    loadM3U(url);
+
+    // Detectar se é URL Xtream e extrair parâmetros automaticamente
+    const xtreamMatch=url.match(/^(https?:\/\/[^/]+).*?[?&]username=([^&]+)&password=([^&]+)/i);
+    if(xtreamMatch){
+      const host=xtreamMatch[1];
+      const user=decodeURIComponent(xtreamMatch[2]);
+      const pass=decodeURIComponent(xtreamMatch[3]);
+      localStorage.setItem('iptv_mode','xtream');
+      localStorage.setItem('xtream_host',host);
+      localStorage.setItem('xtream_user',user);
+      localStorage.setItem('xtream_pass',pass);
+      closeConfig();
+      loadXtream(host,user,pass);
+    }else{
+      localStorage.setItem('iptv_mode','m3u');
+      localStorage.setItem('m3u_url',url);
+      closeConfig();
+      loadM3U(url);
+    }
   }
 }
 
