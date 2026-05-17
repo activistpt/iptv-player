@@ -3,7 +3,7 @@
 Uma aplicação simples e eficiente baseada em tecnologia web para reprodução de listas de canais IPTV.
 Este projeto foi desenvolvido com o foco na facilidade de utilização, permitindo carregar e assistir a transmissões de streaming diretamente no teu dispositivo.
 
-🚀 **Disponível Online:** Podes utilizar a aplicação diretamente no teu browser através do endereço: https://iptv-player-pndu.onrender.com
+🚀 *Disponível Online: Podes utilizar a aplicação diretamente no teu browser através do endereço: [https://iptv-player-pndu.onrender.com](https://rebel-iptv-player.vercel.app/)
 
 ## 🚀 Funcionalidades
 
