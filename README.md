@@ -39,8 +39,7 @@ Certifica-te de que tens o [Node.js](https://nodejs.org/) instalado na tua máqu
 Estrutura do Repositório:
 O código principal deste componente encontra-se estruturado na diretoria tree/main, organizando os scripts de controlo do player, a renderização da interface e os estilos visuais.
 
-Contribuições são sempre bem-vindas! Se encontrares algum bug ou tiveres sugestões de melhoria:
-
+♦️ Contribuições são sempre bem-vindas! Se encontrares algum bug ou tiveres sugestões de melhoria:
 Faz um Fork do projeto. Cria uma Branch para a tua funcionalidade (git checkout -b feature/NovaFuncionalidade).
 Submete um Pull Request.
 
