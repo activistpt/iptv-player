@@ -164,6 +164,7 @@ app.get('/api/m3u', async (req, res) => {
   if (!m3uUrl) return res.status(400).json({ error: 'URL em falta' });
 
   try {
+    console.log('[M3U] URL recebida:', m3uUrl.substring(0, 100));
     // Detectar se é URL Xtream Codes
     const isXtream = m3uUrl.includes('get.php') || m3uUrl.includes('player_api.php') || (m3uUrl.includes('username=') && m3uUrl.includes('password='));
 
@@ -172,6 +173,7 @@ app.get('/api/m3u', async (req, res) => {
       const urlObj = new URL(m3uUrl);
       const username = urlObj.searchParams.get('username') || '';
       const password = urlObj.searchParams.get('password') || '';
+      console.log('[M3U] Xtream detectado:', { username, password: password ? '***' : 'EMPTY', hostname: urlObj.hostname, port: urlObj.port });
       const hostname = urlObj.hostname;
       const port = urlObj.port || 80;
       const host = `${urlObj.protocol}//${hostname}:${port}`;
