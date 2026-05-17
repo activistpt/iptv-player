@@ -1,4 +1,3 @@
-// Force rebuild const express = requ
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -55,6 +54,8 @@ app.get('/stream', async (req, res) => {
     const ct = response.headers.get('content-type') || '';
     if (ct.includes('text') || !ct) {
       res.set('Content-Type', 'video/mp2t');
+    } else if (ct.includes('mpegurl') || ct.includes('m3u8')) {
+      res.set('Content-Type', 'application/vnd.apple.mpegurl');
     } else {
       res.set('Content-Type', ct);
     }
@@ -331,7 +332,7 @@ async function loadXtream(host,user,pass){
       name:ch.name,
       logo:ch.stream_icon||'',
       group:catMap[ch.category_id]||'Geral',
-      url:host+'/live/'+user+'/'+pass+'/'+ch.stream_id+'.ts',
+      url:host+'/live/'+user+'/'+pass+'/'+ch.stream_id+'.m3u8',
       streamId:ch.stream_id
     }));
 
