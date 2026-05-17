@@ -6,30 +6,18 @@
 <title>IPTV Player</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0a0a0f;--surface:#141420;--border:#2a2a3a;
-  --accent:#6c5ce7;--accent2:#a29bfe;--text:#e0e0e0;--muted:#666;
-}
+:root{--bg:#0a0a0f;--surface:#141420;--border:#2a2a3a;--accent:#6c5ce7;--accent2:#a29bfe;--text:#e0e0e0;--muted:#666}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-
-/* Header */
 .header{background:var(--surface);padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0}
 .header h1{font-size:16px;color:var(--accent2)}
 .header .spacer{flex:1}
 .btn{background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;transition:.2s}
 .btn:hover{background:var(--accent2)}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
-.btn-ghost:hover{background:var(--surface)}
-
-/* Search */
 .search-wrap{padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
 .search-wrap input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none}
 .search-wrap input:focus{border-color:var(--accent)}
-
-/* Main layout */
 .main{display:flex;flex:1;overflow:hidden}
-
-/* Channel list */
 .channels{width:320px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0}
 .channel-item{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;align-items:center;gap:10px;transition:.15s}
 .channel-item:hover{background:rgba(108,92,231,.15)}
@@ -38,71 +26,46 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .channel-info{flex:1;min-width:0}
 .channel-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .channel-group{font-size:11px;color:var(--muted);margin-top:2px}
-
-/* Player area */
 .player-area{flex:1;display:flex;flex-direction:column;background:#000;position:relative}
 #video{width:100%;height:100%;background:#000}
 .player-controls{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.8));display:flex;align-items:center;gap:10px;opacity:0;transition:.3s}
 .player-area:hover .player-controls{opacity:1}
 .player-controls .now-playing{font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .player-controls button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px}
-.player-controls button:hover{background:rgba(255,255,255,.25)}
-
-/* Loading / Empty */
 .empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:14px;flex-direction:column;gap:8px}
 .empty .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* Groups filter */
 .groups{padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:6px;overflow-x:auto;flex-shrink:0}
 .group-tag{padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer;background:var(--bg);border:1px solid var(--border);color:var(--muted);white-space:nowrap;transition:.15s}
 .group-tag:hover,.group-tag.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-
-/* Config modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100}
 .modal-overlay.show{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;width:90%;max-width:500px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;width:90%;max-width:500px;max-height:90vh;overflow-y:auto}
 .modal h2{font-size:18px;margin-bottom:16px;color:var(--accent2)}
 .modal label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;margin-top:10px}
 .modal input,.modal textarea{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;resize:vertical}
-.modal textarea{min-height:80px;font-family:monospace}
+.modal textarea{min-height:60px;font-family:monospace}
 .modal input:focus,.modal textarea:focus{border-color:var(--accent)}
 .modal .actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
-
-/* Responsive */
-@media(max-width:768px){
-  .channels{width:260px}
-}
-@media(max-width:600px){
-  .main{flex-direction:column}
-  .channels{width:100%;height:45%;border-right:none;border-bottom:1px solid var(--border)}
-  .player-area{height:55%}
-}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tab{padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;background:var(--bg);border:1px solid var(--border);color:var(--muted)}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media(max-width:768px){.channels{width:260px}}
+@media(max-width:600px){.main{flex-direction:column}.channels{width:100%;height:45%;border-right:none;border-bottom:1px solid var(--border)}.player-area{height:55%}}
 </style>
 </head>
 <body>
-
 <div class="header">
   <h1>🎬 IPTV Player</h1>
   <div class="spacer"></div>
   <button class="btn btn-ghost" onclick="openConfig()">⚙️ Config</button>
   <button class="btn" onclick="loadPlaylist()">📡 Carregar</button>
 </div>
-
-<div class="search-wrap">
-  <input type="text" id="search" placeholder="🔍 Pesquisar canal..." oninput="filterChannels()">
-</div>
-
-<div class="groups" id="groups">
-  <div class="group-tag active" onclick="filterGroup('all',this)">Todos</div>
-</div>
-
+<div class="search-wrap"><input type="text" id="search" placeholder="🔍 Pesquisar canal..." oninput="filterChannels()"></div>
+<div class="groups" id="groups"><div class="group-tag active" onclick="filterGroup('all',this)">Todos</div></div>
 <div class="main">
   <div class="channels" id="channels">
-    <div class="empty">
-      <div class="spinner"></div>
-      <span>Carregando canais...</span>
-    </div>
+    <div class="empty"><div class="spinner"></div><span>Carregando canais...</span></div>
   </div>
   <div class="player-area" id="playerArea">
     <video id="video" controls playsinline webkit-playsinline></video>
@@ -112,176 +75,208 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
   </div>
 </div>
-
-<!-- Config Modal -->
 <div class="modal-overlay" id="configModal">
   <div class="modal">
     <h2>⚙️ Configuração</h2>
-    <label>URL da lista M3U (Xtream Codes)</label>
-    <textarea id="m3uUrl" placeholder="http://servidor:8080/get.php?username=USER&password=PASS&type=m3u_plus"></textarea>
-    <label>OU URL direta do ficheiro M3U</label>
-    <input type="text" id="m3uDirect" placeholder="http://servidor/playlist.m3u">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('xtream',this)">Xtream Codes</div>
+      <div class="tab" onclick="switchTab('m3u',this)">M3U Direto</div>
+    </div>
+    <div id="xtreamTab">
+      <label>Host (ex: http://servidor:8080)</label>
+      <input type="text" id="xtreamHost" placeholder="http://servidor:8080">
+      <label>Username</label>
+      <input type="text" id="xtreamUser" placeholder="username">
+      <label>Password</label>
+      <input type="password" id="xtreamPass" placeholder="password">
+    </div>
+    <div id="m3uTab" style="display:none">
+      <label>URL da lista M3U</label>
+      <textarea id="m3uUrl" placeholder="http://servidor/playlist.m3u"></textarea>
+    </div>
     <div class="actions">
       <button class="btn btn-ghost" onclick="closeConfig()">Cancelar</button>
       <button class="btn" onclick="saveConfig()">💾 Guardar & Carregar</button>
     </div>
   </div>
 </div>
-
 <script>
-const video = document.getElementById('video');
-const channelsEl = document.getElementById('channels');
-const groupsEl = document.getElementById('groups');
-const searchEl = document.getElementById('search');
-const nowPlaying = document.getElementById('nowPlaying');
+const video=document.getElementById('video'),channelsEl=document.getElementById('channels'),groupsEl=document.getElementById('groups'),searchEl=document.getElementById('search'),nowPlaying=document.getElementById('nowPlaying');
+let allChannels=[],currentGroup='all';
 
-let allChannels = [];
-let currentGroup = 'all';
-
-// === CARREGAR PLAYLIST ===
-async function loadPlaylist() {
-  // Tentar localStorage primeiro
-  let url = localStorage.getItem('iptv_url');
-  if (!url) {
-    openConfig();
-    return;
-  }
-  await fetchAndParse(url);
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('xtreamTab').style.display=tab==='xtream'?'block':'none';
+  document.getElementById('m3uTab').style.display=tab==='m3u'?'block':'none';
 }
 
-async function fetchAndParse(url) {
-  channelsEl.innerHTML = '<div class="empty"><div class="spinner"></div><span>A carregar canais...</span></div>';
-  groupsEl.innerHTML = '<div class="group-tag active" onclick="filterGroup(\'all\',this)">Todos</div>';
-  allChannels = [];
+async function loadPlaylist(){
+  const mode=localStorage.getItem('iptv_mode');
+  if(!mode){openConfig();return}
+  if(mode==='xtream'){
+    const host=localStorage.getItem('xtream_host');
+    const user=localStorage.getItem('xtream_user');
+    const pass=localStorage.getItem('xtream_pass');
+    if(!host||!user||!pass){openConfig();return}
+    await loadXtream(host,user,pass);
+  }else{
+    const url=localStorage.getItem('m3u_url');
+    if(!url){openConfig();return}
+    await loadM3U(url);
+  }
+}
 
-  try {
-    // Usar proxy CORS
-    const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
-    const resp = await fetch(proxyUrl);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const text = await resp.text();
+async function loadXtream(host,user,pass){
+  channelsEl.innerHTML='<div class="empty"><div class="spinner"></div><span>A carregar canais...</span></div>';
+  groupsEl.innerHTML='<div class="group-tag active" onclick="filterGroup(\'all\',this)">Todos</div>';
+  allChannels=[];
+  try{
+    const catResp=await fetch('/api/xtream/categories?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
+    if(!catResp.ok) throw new Error('HTTP '+catResp.status);
+    const categories=await catResp.json();
+    const chResp=await fetch('/api/xtream/channels?host='+encodeURIComponent(host)+'&username='+user+'&password='+pass);
+    if(!chResp.ok) throw new Error('HTTP '+catResp.status);
+    const channels=await chResp.json();
+    const catMap={};
+    categories.forEach(c=>{catMap[c.category_id]=c.category_name;});
+    allChannels=channels.map(ch=>({
+      name:ch.name,
+      logo:ch.stream_icon||'',
+      group:catMap[ch.category_id]||'Geral',
+      url:host+'/live/'+user+'/'+pass+'/'+ch.stream_id+'.ts',
+      streamId:ch.stream_id
+    }));
+    if(!allChannels.length){channelsEl.innerHTML='<div class="empty"><span>❌ Nenhum canal encontrado</span></div>';return}
+    buildGroups();
+    renderChannels(allChannels);
+    if(allChannels[0]) playChannel(allChannels[0]);
+  }catch(err){
+    channelsEl.innerHTML='<div class="empty"><span>❌ Erro: '+err.message+'</span><br><button class="btn" style="margin-top:12px" onclick="openConfig()">Configurar</button></div>';
+  }
+}
+
+async function loadM3U(url){
+  channelsEl.innerHTML='<div class="empty"><div class="spinner"></div><span>A carregar canais...</span></div>';
+  groupsEl.innerHTML='<div class="group-tag active" onclick="filterGroup(\'all\',this)">Todos</div>';
+  allChannels=[];
+  try{
+    const proxyUrl='/api/m3u?url='+encodeURIComponent(url);
+    const resp=await fetch(proxyUrl);
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const text=await resp.text();
     parseM3U(text);
-  } catch (err) {
-    console.error(err);
-    channelsEl.innerHTML = `<div class="empty"><span>❌ Erro: ${err.message}</span><br><button class="btn" style="margin-top:12px" onclick="openConfig()">Configurar lista</button></div>`;
+  }catch(err){
+    channelsEl.innerHTML='<div class="empty"><span>❌ Erro: '+err.message+'</span><br><button class="btn" style="margin-top:12px" onclick="openConfig()">Configurar</button></div>';
   }
 }
 
-function parseM3U(text) {
-  const lines = text.split('\n');
-  let current = {};
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (line.startsWith('#EXTINF:')) {
-      // Extrair logo
-      const logoMatch = line.match(/tvg-logo="([^"]*)"/);
-      const logo = logoMatch ? logoMatch[1] : '';
-      // Extrair nome (depois da última vírgula)
-      const nameMatch = line.match(/,(.+)$/);
-      const name = nameMatch ? nameMatch[1].trim() : line;
-      // Extrair grupo
-      const groupMatch = line.match(/group-title="([^"]*)"/);
-      const group = groupMatch ? groupMatch[1] : 'Sem grupo';
-      current = { name, logo, group };
-    } else if (line && !line.startsWith('#') && current.name) {
-      current.url = line;
-      allChannels.push({ ...current });
-      current = {};
+function parseM3U(text){
+  const lines=text.split('\n');
+  let cur={};
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i].trim();
+    if(line.startsWith('#EXTINF:')){
+      const lm=line.match(/tvg-logo="([^"]*)"/);
+      const logo=lm?lm[1]:'';
+      const nm=line.match(/,(.+)$/);
+      const name=nm?nm[1].trim():line;
+      const gm=line.match(/group-title="([^"]*)"/);
+      const group=gm?gm[1]:'Sem grupo';
+      cur={name,logo,group};
+    }else if(line&&!line.startsWith('#')&&cur.name){
+      cur.url=line;
+      allChannels.push({...cur});
+      cur={};
     }
   }
-
-  if (allChannels.length === 0) {
-    channelsEl.innerHTML = '<div class="empty"><span>❌ Nenhum canal encontrado na lista</span></div>';
-    return;
-  }
-
+  if(!allChannels.length){channelsEl.innerHTML='<div class="empty"><span>❌ Nenhum canal encontrado</span></div>';return}
   buildGroups();
   renderChannels(allChannels);
-  // Auto-play primeiro canal
-  if (allChannels[0]) playChannel(allChannels[0]);
+  if(allChannels[0]) playChannel(allChannels[0]);
 }
 
-function buildGroups() {
-  const groups = [...new Set(allChannels.map(c => c.group))].sort();
-  groupsEl.innerHTML = '<div class="group-tag active" onclick="filterGroup(\'all\',this)">Todos</div>';
-  groups.forEach(g => {
-    const tag = document.createElement('div');
-    tag.className = 'group-tag';
-    tag.textContent = g;
-    tag.onclick = function() { filterGroup(g, this); };
-    groupsEl.appendChild(tag);
+function buildGroups(){
+  const groups=[...new Set(allChannels.map(c=>c.group))].sort();
+  groupsEl.innerHTML='<div class="group-tag active" onclick="filterGroup(\'all\',this)">Todos</div>';
+  groups.forEach(g=>{
+    const t=document.createElement('div');
+    t.className='group-tag';
+    t.textContent=g;
+    t.onclick=function(){filterGroup(g,this)};
+    groupsEl.appendChild(t);
   });
 }
 
-function renderChannels(list) {
-  if (list.length === 0) {
-    channelsEl.innerHTML = '<div class="empty"><span>Nenhum canal encontrado</span></div>';
-    return;
-  }
-  channelsEl.innerHTML = list.map((ch, i) => `
-    <div class="channel-item" onclick="playChannel(allChannels.find(c=>c.url==='${ch.url.replace(/'/g, "\\'")}'))" data-url="${ch.url.replace(/'/g, "\\'")}">
-      <img class="channel-logo" src="${ch.logo || ''}" onerror="this.style.display='none'">
-      <div class="channel-info">
-        <div class="channel-name">${ch.name}</div>
-        <div class="channel-group">${ch.group}</div>
-      </div>
-    </div>
-  `).join('');
+function renderChannels(list){
+  if(!list.length){channelsEl.innerHTML='<div class="empty"><span>Nenhum canal encontrado</span></div>';return}
+  channelsEl.innerHTML=list.map(ch=>'<div class="channel-item" data-url="'+ch.url.replace(/'/g,"\\'")+'" onclick="playChannelByUrl(this.dataset.url)"><img class="channel-logo" src="'+(ch.logo||'')+'" onerror="this.style.display=\'none\'"><div class="channel-info"><div class="channel-name">'+ch.name+'</div><div class="channel-group">'+ch.group+'</div></div></div>').join('');
 }
 
-function filterChannels() {
-  const q = searchEl.value.toLowerCase();
-  const filtered = allChannels.filter(c =>
-    c.name.toLowerCase().includes(q) &&
-    (currentGroup === 'all' || c.group === currentGroup)
-  );
-  renderChannels(filtered);
+function playChannel(ch){
+  if(!ch||!ch.url)return;
+  nowPlaying.textContent=ch.name;
+  const streamUrl='/stream?url='+encodeURIComponent(ch.url);
+  video.src=streamUrl;
+  video.play().catch(()=>{});
+  document.querySelectorAll('.channel-item').forEach(el=>el.classList.toggle('active',el.dataset.url===ch.url));
 }
 
-function filterGroup(group, el) {
-  currentGroup = group;
-  document.querySelectorAll('.group-tag').forEach(t => t.classList.remove('active'));
+function playChannelByUrl(url){
+  const ch=allChannels.find(c=>c.url===url);
+  if(ch) playChannel(ch);
+}
+
+function filterChannels(){
+  const q=searchEl.value.toLowerCase();
+  const f=allChannels.filter(c=>c.name.toLowerCase().includes(q)&&(currentGroup==='all'||c.group===currentGroup));
+  renderChannels(f);
+}
+
+function filterGroup(g,el){
+  currentGroup=g;
+  document.querySelectorAll('.group-tag').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   filterChannels();
 }
 
-function playChannel(ch) {
-  if (!ch || !ch.url) return;
-  nowPlaying.textContent = ch.name;
-  // Usar proxy de stream para evitar CORS e problemas de content-type
-  const streamUrl = '/stream?url=' + encodeURIComponent(ch.url);
-  video.src = streamUrl;
-  video.play().catch(() => {});
-  // Highlight
-  document.querySelectorAll('.channel-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.url === ch.url);
-  });
+function toggleFullscreen(){
+  const a=document.getElementById('playerArea');
+  if(document.fullscreenElement)document.exitFullscreen();else a.requestFullscreen();
 }
 
-function toggleFullscreen() {
-  const area = document.getElementById('playerArea');
-  if (document.fullscreenElement) document.exitFullscreen();
-  else area.requestFullscreen();
-}
-
-// === CONFIG ===
-function openConfig() {
-  document.getElementById('m3uUrl').value = localStorage.getItem('iptv_url') || '';
+function openConfig(){
+  document.getElementById('xtreamHost').value=localStorage.getItem('xtream_host')||'';
+  document.getElementById('xtreamUser').value=localStorage.getItem('xtream_user')||'';
+  document.getElementById('xtreamPass').value=localStorage.getItem('xtream_pass')||'';
+  document.getElementById('m3uUrl').value=localStorage.getItem('m3u_url')||'';
   document.getElementById('configModal').classList.add('show');
 }
-function closeConfig() {
-  document.getElementById('configModal').classList.remove('show');
-}
-async function saveConfig() {
-  let url = document.getElementById('m3uUrl').value.trim() || document.getElementById('m3uDirect').value.trim();
-  if (!url) { alert('Introduz um URL'); return; }
-  localStorage.setItem('iptv_url', url);
-  closeConfig();
-  await fetchAndParse(url);
+function closeConfig(){document.getElementById('configModal').classList.remove('show')}
+
+function saveConfig(){
+  const activeTab=document.querySelector('.tab.active');
+  if(activeTab.textContent.includes('Xtream')){
+    const host=document.getElementById('xtreamHost').value.trim();
+    const user=document.getElementById('xtreamUser').value.trim();
+    const pass=document.getElementById('xtreamPass').value.trim();
+    if(!host||!user||!pass){alert('Preenche todos os campos');return}
+    localStorage.setItem('iptv_mode','xtream');
+    localStorage.setItem('xtream_host',host);
+    localStorage.setItem('xtream_user',user);
+    localStorage.setItem('xtream_pass',pass);
+    closeConfig();
+    loadXtream(host,user,pass);
+  }else{
+    const url=document.getElementById('m3uUrl').value.trim();
+    if(!url){alert('Introduz um URL');return}
+    localStorage.setItem('iptv_mode','m3u');
+    localStorage.setItem('m3u_url',url);
+    closeConfig();
+    loadM3U(url);
+  }
 }
 
-// === INIT ===
 loadPlaylist();
 </script>
 </body>
