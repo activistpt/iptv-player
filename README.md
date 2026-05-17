@@ -24,7 +24,7 @@ Certifica-te de que tens o [Node.js](https://nodejs.org/) instalado na tua máqu
 
 1. **Clona o repositório:**
    ```bash
-   git clone [https://github.com/activistpt/iptv-player.git]
+   git clone https://github.com/activistpt/iptv-player.git
 
 2. Navega até à pasta do projeto:
    cd iptv-player
