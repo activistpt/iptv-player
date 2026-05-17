@@ -37,7 +37,6 @@ app.get('/api/proxy', async (req, res) => {
 });
 
 // === PROXY STREAM — Relay de vídeo via Xtream ===
-// Para HLS (.m3u8), reescreve caminhos relativos para passar pelo proxy
 app.get('/stream', async (req, res) => {
   const targetUrl = req.query.url;
   if (!targetUrl) return res.status(400).json({ error: 'URL em falta' });
@@ -53,34 +52,17 @@ app.get('/stream', async (req, res) => {
       timeout: 60000,
     });
     const ct = response.headers.get('content-type') || '';
-    const isHLS = ct.includes('mpegurl') || ct.includes('m3u8') || targetUrl.endsWith('.m3u8');
-
-    if (isHLS) {
-      // HLS: reescrever caminhos relativos para passar pelo proxy
-      let text = await response.text();
-      // Substituir caminhos relativos (/hls/...) por URLs absolutos via proxy
-      text = text.replace(/^(?!#)(\S+)$/gm, (match) => {
-        if (match.startsWith('http')) return match;
-        // Caminho relativo — converter para absoluto via proxy
-        const absUrl = new URL(match, origin).href;
-        return '/stream?url=' + encodeURIComponent(absUrl);
-      });
+    if (ct.includes('text') || !ct) {
+      res.set('Content-Type', 'video/mp2t');
+    } else if (ct.includes('mpegurl') || ct.includes('m3u8')) {
       res.set('Content-Type', 'application/vnd.apple.mpegurl');
-      res.set('Access-Control-Allow-Origin', '*');
-      res.set('Cache-Control', 'no-cache, no-store');
-      res.send(text);
     } else {
-      // Stream direto (TS, etc)
-      if (ct.includes('text') || !ct) {
-        res.set('Content-Type', 'video/mp2t');
-      } else {
-        res.set('Content-Type', ct);
-      }
-      res.set('Access-Control-Allow-Origin', '*');
-      res.set('Cache-Control', 'no-cache, no-store');
-      res.set('Accept-Ranges', 'bytes');
-      response.body.pipe(res);
+      res.set('Content-Type', ct);
     }
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'no-cache, no-store');
+    res.set('Accept-Ranges', 'bytes');
+    response.body.pipe(res);
   } catch (err) {
     res.status(502).json({ error: 'Stream falhou', detail: err.message });
   }
@@ -103,9 +85,9 @@ app.get('/api/xtream/categories', async (req, res) => {
   }
 });
 
-// === XTREAM API — Buscar canais (com limite e busca) ===
+// === XTREAM API — Buscar canais ===
 app.get('/api/xtream/channels', async (req, res) => {
-  const { host, username, password, category, search, limit, offset } = req.query;
+  const { host, username, password, category } = req.query;
   if (!host || !username || !password) {
     return res.status(400).json({ error: 'Parâmetros em falta: host, username, password' });
   }
@@ -115,22 +97,9 @@ app.get('/api/xtream/channels', async (req, res) => {
       url += `&category_id=${category}`;
     }
     const response = await fetch(url, { timeout: 30000 });
-    let data = await response.json();
-
-    // Filtrar por busca no servidor
-    if (search) {
-      const q = search.toLowerCase();
-      data = data.filter(ch => (ch.name || '').toLowerCase().includes(q));
-    }
-
-    // Paginar no servidor
-    const total = data.length;
-    const off = parseInt(offset) || 0;
-    const lim = parseInt(limit) || 500; // máximo 500 por pedido
-    data = data.slice(off, off + lim);
-
+    const data = await response.json();
     res.set('Access-Control-Allow-Origin', '*');
-    res.json({ total, channels: data });
+    res.json(data);
   } catch (err) {
     res.status(502).json({ error: 'Falha Xtream', detail: err.message });
   }
@@ -175,67 +144,22 @@ app.get('/api/xtream/m3u', async (req, res) => {
   }
 });
 
-// === FETCH M3U — Suporta M3U direto E URLs Xtream Codes ===
+// === FETCH M3U (fallback para listas diretas) ===
 app.get('/api/m3u', async (req, res) => {
   const m3uUrl = req.query.url;
   if (!m3uUrl) return res.status(400).json({ error: 'URL em falta' });
-
   try {
-    // Detectar se é URL Xtream Codes (contém get.php ou player_api.php com username/password)
-    const isXtream = m3uUrl.includes('get.php') || m3uUrl.includes('player_api.php');
-
-    if (isXtream) {
-      // Extrair parâmetros da URL Xtream
-      const urlObj = new URL(m3uUrl);
-      const username = urlObj.searchParams.get('username') || '';
-      const password = urlObj.searchParams.get('password') || '';
-      const host = `${urlObj.protocol}//${urlObj.hostname}:${urlObj.port || 80}`;
-
-      if (!username || !password) {
-        return res.status(400).json({ error: 'URL Xtream sem username/password' });
-      }
-
-      // Buscar categorias
-      const catUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_categories`;
-      const catResp = await fetch(catUrl, { timeout: 15000 });
-      const categories = await catResp.json();
-      const catMap = {};
-      categories.forEach(c => { catMap[c.category_id] = c.category_name; });
-
-      // Buscar canais
-      const chUrl = `${host}/player_api.php?username=${username}&password=${password}&action=get_live_streams`;
-      const chResp = await fetch(chUrl, { timeout: 30000 });
-      const channels = await chResp.json();
-
-      // Gerar M3U
-      let m3u = '#EXTM3U\n';
-      channels.forEach(ch => {
-        const logo = ch.stream_icon || '';
-        const group = catMap[ch.category_id] || 'Geral';
-        const name = ch.name || '';
-        const streamId = ch.stream_id;
-        const streamUrl = `${host}/live/${username}/${password}/${streamId}.m3u8`;
-        m3u += `#EXTINF:-1 tvg-logo="${logo}" group-title="${group}",${name}\n`;
-        m3u += `${streamUrl}\n`;
-      });
-
-      res.set('Content-Type', 'application/x-mpegURL; charset=utf-8');
-      res.set('Access-Control-Allow-Origin', '*');
-      res.send(m3u);
-    } else {
-      // M3U direto — fazer fetch normal
-      const response = await fetch(m3uUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36',
-          'Accept': '*/*',
-        },
-        timeout: 20000,
-      });
-      const text = await response.text();
-      res.set('Content-Type', 'application/x-mpegURL; charset=utf-8');
-      res.set('Access-Control-Allow-Origin', '*');
-      res.send(text);
-    }
+    const response = await fetch(m3uUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36',
+        'Accept': '*/*',
+      },
+      timeout: 20000,
+    });
+    const text = await response.text();
+    res.set('Content-Type', 'application/x-mpegURL; charset=utf-8');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.send(text);
   } catch (err) {
     res.status(502).json({ error: 'Falha ao descarregar M3U', detail: err.message });
   }
