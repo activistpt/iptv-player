@@ -144,7 +144,7 @@ async function loadXtream(host,user,pass){
       name:ch.name,
       logo:ch.stream_icon||'',
       group:catMap[ch.category_id]||'Geral',
-      url:host+'/live/'+user+'/'+pass+'/'+ch.stream_id+'.ts',
+      url:host+'/live/'+user+'/'+pass+'/'+ch.stream_id+'.m3u8',
       streamId:ch.stream_id
     }));
     if(!allChannels.length){channelsEl.innerHTML='<div class="empty"><span>❌ Nenhum canal encontrado</span></div>';return}
