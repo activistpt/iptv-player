@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  iptv-player:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      # Opcional: pré-configurar a lista (podes configurar depois na UI)
+      # - IPTV_URL=http://axcosta.tugaonpt.com:8080/get.php?username=3N4pg2hyCATBWK3e&password=TL5myry3hdyWk4fa&type=m3u_plus
+    restart: unless-stopped

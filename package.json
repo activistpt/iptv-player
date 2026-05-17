@@ -1,0 +1,15 @@
+{
+  "name": "iptv-player",
+  "version": "1.0.0",
+  "description": "IPTV Player Web Self-Hosted com Proxy CORS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.7.0",
+    "m3u8-parser": "^7.1.0"
+  }
+}
