@@ -5,10 +5,10 @@ Este projeto foi desenvolvido com o foco na facilidade de utilização, permitin
 
 🚀 *Disponível online: Podes utilizar a aplicação diretamente no teu browser através do endereço: [https://rebel-iptv-player.vercel.app](https://rebel-iptv-player.vercel.app/)
 
-Playlist M3U8 de canais IPTV, alguns são gratuitos localmente (em sinal aberto / over the air). A maior coleção comunitária com dezenas de milhares de canais de +200 países. Agrupados por país, idioma e categoria.->
+Playlist M3U8 de canais gratuitos localmente (em sinal aberto / over the air). A maior coleção comunitária com dezenas de milhares de canais de +200 países. Agrupados por país, idioma e categoria.->
 [https://iptv-org.github.io/iptv/index.m3u](https://iptv-org.github.io/iptv/index.m3u)
 
-Playlist M3U8 focado em canais gratuitos e legais (Plex, Pluto TV, Samsung TV Plus, Roku, YouTube Live.) ->
+Playlist M3U8 de canais gratuitos e legais (Plex, Pluto TV, Samsung TV Plus, Roku, YouTube Live.) ->
 [https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8](https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8)
 
 ## 🚀 Funcionalidades
