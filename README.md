@@ -3,7 +3,10 @@
 Uma aplicação simples e eficiente baseada em tecnologia web para reprodução de listas de canais IPTV.
 Este projeto foi desenvolvido com o foco na facilidade de utilização, permitindo carregar e assistir a transmissões de streaming diretamente no teu dispositivo.
 
-🚀 *Disponível Online: Podes utilizar a aplicação diretamente no teu browser através do endereço: [https://rebel-iptv-player.vercel.app](https://rebel-iptv-player.vercel.app/)
+🚀 *Disponível online: Podes utilizar a aplicação diretamente no teu browser através do endereço: [https://rebel-iptv-player.vercel.app](https://rebel-iptv-player.vercel.app/)
+
+Playlist M3U de canais IPTV de todo o mundo, alguns são gratuitos localmente (em sinal aberto / over the air). ->
+[https://iptv-org.github.io/iptv/index.m3u](https://iptv-org.github.io/iptv/index.m3u)
 
 ## 🚀 Funcionalidades
 
