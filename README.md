@@ -5,6 +5,16 @@ Este projeto foi desenvolvido com o foco na facilidade de utilização, permitin
 
 🚀 *Disponível online: Podes utilizar a aplicação diretamente no teu browser através do endereço: [https://rebel-iptv-player.vercel.app](https://rebel-iptv-player.vercel.app/)
 
+LISTA M3UPT (Portugal – recomendado)
+Lista oficial com canais portugueses públicos (RTP, SIC, TVI, etc.) + rádio. 100% legal.
+
+Link M3U: https://m3upt.com/iptv
+EPG: https://m3upt.com/epg
+
+Lista IPTV Legal (Brasil/PT)
+https://tv.meuted.io/iptvlegal.m3u
+(Canais grátis e legais de vários países)
+
 Playlist M3U8 de canais gratuitos e legais (Plex, Pluto TV, Samsung TV Plus, Roku, YouTube Live.) ->
 [https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8](https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8)
 
