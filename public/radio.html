@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio Comunidade</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.card{background:#12121a;border-radius:16px;padding:32px;border:1px solid rgba(255,255,255,0.06);width:100%;max-width:420px;text-align:center}
+h1{font-size:1.4rem;margin-bottom:4px}
+.sub{color:#666;font-size:0.8rem;margin-bottom:24px}
+.disc{width:120px;height:120px;border-radius:50%;background:conic-gradient(from 0deg,#1a1a2e,#16213e,#0f3460,#1a1a2e,#e91e63,#1a1a2e);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:40px;animation:spin 3s linear infinite;animation-play-state:paused}
+.disc.playing{animation-play-state:running}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.btn{background:linear-gradient(135deg,#e91e63,#9c27b0);color:#fff;border:none;border-radius:50%;width:56px;height:56px;font-size:22px;cursor:pointer;margin:0 auto;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(233,30,99,0.4)}
+.btn:hover{transform:scale(1.05)}
+.mt{margin-top:16px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="disc" id="d">&#x1F3B5;</div>
+  <h1>Comunidade IPTV</h1>
+  <p class="sub">Clica no play para ouvir</p>
+  <button class="btn" id="p" onclick="t()">&#x25B6;</button>
+</div>
+<audio id="a" preload="none">
+  <source src="https://raw.githubusercontent.com/activistpt/pirate-tv-clone/main/assets/comunidade-iptv.mp3" type="audio/mpeg">
+</audio>
+<script>
+var au=document.getElementById('a'),pl=false;
+function t(){
+  if(!pl){au.play();pl=true;document.getElementById('p').innerHTML='&#x23F8;';document.getElementById('d').classList.add('playing')}
+  else{au.pause();pl=false;document.getElementById('p').innerHTML='&#x25B6';document.getElementById('d').classList.remove('playing')}
+}
+au.addEventListener('ended',function(){pl=false;document.getElementById('p').innerHTML='&#x25B6';document.getElementById('d').classList.remove('playing')});
+</script>
+<!-- 1779672183 -->
+</body>
+</html>
